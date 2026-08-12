@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cast Vote | NIET</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header class="site-header">
+<div class="header-glow"></div>
+<div class="brand-wrap"><img src="/static/images/niet-header.png" class="institute-logo"
+alt="Nehru Institute of Engineering and Technology"></div>
+</header>
+<nav class="top-nav"><strong>🗳️ STUDENT ELECTION 2026</strong><a href="/">Home</a></nav>
+<main class="container"><div class="page-title"><div><span class="eyebrow">VOTER PORTAL</span>
+<h1>Cast Your Vote</h1><p>Enter your registered ID and select one candidate.</p></div></div>
+<div class="card">
+{% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+{% if candidates %}
+<form method="POST" onsubmit="return confirmVote()">
+<label>Voter ID</label><input id="voter_id" name="voter_id" required placeholder="Example: NIET2026001"
+maxlength="30" oninput="this.value=this.value.toUpperCase()">
+<span class="eyebrow">STEP 2 OF 2</span><h2>Select One Candidate</h2><p class="muted">Review the candidate details carefully. You can select only one candidate.</p>
+<div class="candidate-grid">
+{% for c in candidates %}
+<label class="candidate"><input type="radio" name="candidate_id" value="{{ c.id }}" required>
+{% if c.photo %}<img src="{{ c.photo }}" alt="{{ c.name }}">
+{% else %}<div class="avatar">{{ c.name[0] }}</div>{% endif %}
+<div class="candidate-info"><h3>{{ c.name }}</h3><p>{{ c.department }} • {{ c.year }}</p>
+<p><b>Symbol:</b> {{ c.symbol or '—' }}</p><small>{{ c.manifesto or '' }}</small></div></label>
+{% endfor %}
+</div><div id="selectionStatus" class="alert" style="display:none;margin-top:18px">
+      Selected candidate: <strong id="selectedCandidateName"></strong>
+    </div>
+    <button id="submitVoteBtn" class="btn primary full" type="submit">Submit Vote</button>
+</form>
+{% else %}<div class="alert">Candidates are not available yet.</div>{% endif %}
+</div></main>
+<script>
+const candidateRadios = document.querySelectorAll('input[name="candidate_id"]');
+candidateRadios.forEach(radio => {
+  radio.addEventListener("change", () => {
+    const card = radio.closest(".candidate");
+    const name = card ? card.querySelector("h3").textContent.trim() : "";
+    document.getElementById("selectedCandidateName").textContent = name;
+    document.getElementById("selectionStatus").style.display = "block";
+  });
+});
+
+function confirmVote(){
+  const s=document.querySelector('input[name="candidate_id"]:checked');
+  const v=document.getElementById("voter_id").value.trim();
+  if(!v){ alert("Please enter your registered Voter ID."); return false; }
+  if(!s){ alert("Please select one candidate before submitting."); return false; }
+
+  const card = s.closest(".candidate");
+  const name = card ? card.querySelector("h3").textContent.trim() : "selected candidate";
+
+  return confirm(
+    "Please confirm your vote.\n\n" +
+    "Voter ID: " + v + "\n" +
+    "Candidate: " + name + "\n\n" +
+    "Once submitted, your vote cannot be changed."
+  );
+}
+</script></body></html>

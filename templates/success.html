@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vote Submitted Successfully | NIET</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-glow"></div>
+  <div class="brand-wrap">
+    <img src="/static/images/niet-header.png" class="institute-logo"
+         alt="Nehru Institute of Engineering and Technology">
+  </div>
+</header>
+
+<main class="hero">
+  <section class="card center hero-card" aria-live="polite">
+    <div class="success-icon" aria-hidden="true">✓</div>
+    <span class="eyebrow">ELECTION PORTAL • CONFIRMATION</span>
+    <h1>Your Vote Has Been Submitted</h1>
+
+    <p>
+      Thank you, <span class="success-name">{{ voter_name }}</span>.
+      Your vote has been securely recorded.
+    </p>
+
+    <div class="success-meta">
+      <span>🪪</span>
+      <span>Voter ID: <strong>{{ voter_id }}</strong></span>
+    </div>
+    {% if voter_department %}
+    <div class="success-meta" style="margin-left:6px">
+      <span>🎓</span>
+      <span>{{ voter_department }}</span>
+    </div>
+    {% endif %}
+
+    <div class="voice-panel" id="voicePanel">
+      <div class="voice-wave" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <strong id="voiceStatus">Confirmation voice message</strong>
+      <div id="voiceText" class="muted" style="margin-top:4px">
+        Your vote has been successfully completed.
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="btn primary" href="/">Finish Election</a>
+      <button class="btn secondary" type="button" onclick="speakConfirmation()">
+        🔊 Hear Again
+      </button>
+    </div>
+  </section>
+</main>
+
+<script>
+const voterName = {{ voter_name|tojson }};
+const message =
+  "Thank you, " + voterName +
+  ". Your vote has been successfully submitted. Your vote has been recorded. Have a great day.";
+
+function chooseVoice() {
+  const voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  return voices.find(v => /^en-IN$/i.test(v.lang))
+      || voices.find(v => /^en/i.test(v.lang))
+      || voices[0]
+      || null;
+}
+
+function speakConfirmation() {
+  if (!("speechSynthesis" in window)) {
+    document.getElementById("voiceStatus").textContent =
+      "Voice message is not supported by this browser.";
+    return;
+  }
+
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.rate = 0.92;
+  utterance.pitch = 1.02;
+  utterance.volume = 1;
+
+  const voice = chooseVoice();
+  if (voice) utterance.voice = voice;
+
+  utterance.onstart = () => {
+    document.getElementById("voiceStatus").textContent =
+      "🔊 Playing confirmation message…";
+  };
+  utterance.onend = () => {
+    document.getElementById("voiceStatus").textContent =
+      "✓ Voice confirmation completed";
+  };
+  utterance.onerror = () => {
+    document.getElementById("voiceStatus").textContent =
+      "Voice playback could not be started. Use “Hear Again”.";
+  };
+
+  speechSynthesis.speak(utterance);
+}
+
+/* Some browsers populate voices asynchronously. */
+if ("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged = () => {};
+  window.addEventListener("load", () => {
+    setTimeout(speakConfirmation, 450);
+  });
+}
+</script>
+</body>
+</html>

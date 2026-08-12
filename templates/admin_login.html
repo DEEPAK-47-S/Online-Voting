@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Login | NIET</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header class="site-header">
+<div class="header-glow"></div>
+<div class="brand-wrap"><img src="/static/images/niet-header.png" class="institute-logo"
+alt="Nehru Institute of Engineering and Technology"></div>
+</header>
+<div class="hero"><div class="card login">
+<span class="eyebrow">ADMIN ACCESS</span><h1>Admin Portal</h1><p class="muted">Election administrator login</p>
+{% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+<form method="POST"><label>Username</label><input name="username" required>
+<label>Password</label><input type="password" name="password" required>
+<button class="btn primary full">Login</button></form>
+<a class="back" href="/">← Back to voting page</a>
+</div></div></body></html>

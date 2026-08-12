@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard | NIET</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header class="site-header">
+<div class="header-glow"></div>
+<div class="brand-wrap"><img src="/static/images/niet-header.png" class="institute-logo"
+alt="Nehru Institute of Engineering and Technology"></div>
+</header>
+<nav class="top-nav"><strong>🗳️ STUDENT ELECTION 2026</strong>
+<div><a href="/admin/results">Results</a><a href="/admin/export">Export CSV</a><a href="/admin/logout">Logout</a></div></nav>
+<main class="container">
+{% with messages = get_flashed_messages() %}{% for msg in messages %}<div class="alert success">{{ msg }}</div>{% endfor %}{% endwith %}
+
+<div class="page-title"><div><span class="eyebrow">ADMIN CONTROL CENTER</span>
+<h1>Election Dashboard</h1><p>Manage candidates, voters and monitor voting progress.</p></div>
+<div class="candidate-limit"><b>{{ candidates|length }}/11</b><span>Candidates</span></div></div>
+
+<div class="stats">
+<div class="stat"><b id="liveTotalVotes">{{ total_votes }}</b><span>Total Votes</span></div>
+<div class="stat"><b id="liveVotedCount">{{ voted_count }}</b><span>Students Voted</span></div>
+<div class="stat"><b id="liveRemaining">{{ voter_count - voted_count }}</b><span>Remaining</span></div>
+<div class="stat"><b id="livePercentage">{% if voter_count %}{{ ((voted_count / voter_count) * 100)|round(1) }}%{% else %}0%{% endif %}</b><span>Voting Percentage</span></div>
+</div>
+
+<div class="two-col">
+<section class="card animated-card"><div class="card-heading"><div><span class="eyebrow">NOMINATION</span><h2>Add Candidate</h2></div><span class="pill">Max 11</span></div>
+<form method="POST" action="/admin/candidate/add" enctype="multipart/form-data">
+<div class="photo-upload"><div class="upload-preview" id="candidatePreview"><span>PHOTO</span></div>
+<div><label>Candidate Photo</label><input type="file" name="photo" id="candidatePhoto" accept=".png,.jpg,.jpeg,.webp">
+<small>PNG / JPG / JPEG / WEBP</small></div></div>
+<label>Candidate Name *</label><input name="name" placeholder="Enter candidate name" required>
+<div class="form-grid"><div><label>Department *</label><input name="department" placeholder="CSE" required></div>
+<div><label>Year / Section *</label><input name="year" placeholder="III CSE A" required></div></div>
+<label>Election Symbol</label><input name="symbol" placeholder="Example: Book / Star / Tree">
+<label>Manifesto / Short Profile</label><textarea name="manifesto"></textarea>
+<button class="btn primary full" type="submit">＋ Add Candidate</button></form></section>
+
+<section class="card animated-card"><div class="card-heading"><div><span class="eyebrow">ELIGIBILITY</span><h2>Register Voter</h2></div><span class="pill">1 ID = 1 Vote</span></div>
+<form method="POST" action="/admin/voter/add"><label>Student / Voter ID *</label><input name="voter_id" placeholder="Example: NIET2026001" required>
+<label>Student Name *</label><input name="name" placeholder="Enter student name" required><label>Department</label><input name="department" placeholder="CSE">
+<button class="btn primary full">＋ Register Voter</button></form>
+
+<div class="bulk-upload-box">
+  <div class="bulk-upload-title"><div><span class="eyebrow">FAST REGISTRATION</span><h3>Bulk Upload Voters</h3></div><span class="pill">CSV / EXCEL</span></div>
+  <p class="muted">Register hundreds of students at once using <b>voter_id</b>, <b>name</b> and optional <b>department</b> columns.</p>
+  <form method="POST" action="/admin/voter/bulk-upload" enctype="multipart/form-data" id="bulkVoterForm">
+    <label class="file-drop" for="voterFile"><span class="upload-icon">↑</span><span><b id="voterFileName">Choose CSV / Excel file</b><small>CSV, XLSX or XLS</small></span><input type="file" name="voter_file" id="voterFile" accept=".csv,.xlsx,.xls" required></label>
+    <div class="bulk-actions"><a class="btn secondary" href="/admin/voter/template">↓ Download Template</a><button class="btn primary" type="submit">⇧ Upload & Register</button></div>
+  </form>
+  <div class="bulk-note">✓ Existing Voter IDs are skipped &nbsp; • &nbsp; ✓ Duplicate rows are skipped &nbsp; • &nbsp; ✓ One ID = One Vote</div>
+</div>
+<div class="info-box"><b>Voting rule</b><p>A registered voter can submit only one vote. After submission, the Voter ID is locked.</p></div>
+</section></div>
+
+<section class="card"><div class="section-head"><div><span class="eyebrow">LIVE MONITOR</span><h2>Election Results</h2>
+<p class="muted">Automatically refreshes every 3 seconds.</p></div><a class="btn secondary" href="/admin/results">Open Full Results</a></div>
+<div id="leaderBox" class="leader-box">Loading live results...</div><div id="liveResults" class="live-results"></div></section>
+
+<section class="card"><div class="section-head"><div><span class="eyebrow">CANDIDATES</span><h2>Candidate List</h2></div>
+<span class="pill">{{ candidates|length }} / 11</span></div>
+<div class="table-wrap"><table><tr><th>#</th><th>Photo</th><th>Candidate</th><th>Department</th><th>Year</th><th>Symbol</th><th>Votes</th><th>Action</th></tr>
+{% for c in candidates %}<tr><td>{{ loop.index }}</td><td>
+{% if c.photo %}<img src="{{ c.photo }}" class="table-photo" alt="{{ c.name }}">
+{% else %}<div class="table-avatar">{{ c.name[0] }}</div>{% endif %}</td>
+<td><b>{{ c.name }}</b><small class="table-sub">{{ c.manifesto or '' }}</small></td>
+<td>{{ c.department }}</td><td>{{ c.year }}</td><td>{{ c.symbol or '—' }}</td>
+<td><span class="vote-badge">{{ c.votes }}</span></td><td>
+<form method="POST" action="/admin/candidate/delete/{{ c.id }}" onsubmit="return confirm('Delete this candidate?')">
+<button class="danger-btn">Delete</button></form></td></tr>{% endfor %}</table></div></section>
+
+<section class="card"><div class="section-head"><div><span class="eyebrow">REGISTERED STUDENTS</span><h2>Voter Register</h2><p class="muted">Total registered voters: <b>{{ voter_count }}</b> • Voted: <b>{{ voted_count }}</b></p></div></div>
+<div class="table-wrap"><table><tr><th>#</th><th>Voter ID</th><th>Student Name</th><th>Department</th><th>Status</th></tr>
+{% for v in voters %}<tr><td>{{ loop.index }}</td><td><b>{{ v.voter_id }}</b></td><td>{{ v.name }}</td><td>{{ v.department or '—' }}</td><td>{% if v.has_voted %}<span class="status-badge voted">VOTED</span>{% else %}<span class="status-badge pending">NOT VOTED</span>{% endif %}</td></tr>{% else %}<tr><td colspan="5" class="muted">No voters registered yet.</td></tr>{% endfor %}</table></div></section>
+
+<section class="card danger-zone"><div><span class="eyebrow">TESTING ONLY</span><h2>Reset Votes</h2>
+<p>Use this only while testing. It removes all votes and resets voter status.</p></div>
+<form method="POST" action="/admin/reset-votes" onsubmit="return confirm('RESET ALL VOTES? This cannot be undone.')">
+<button class="danger-btn large">Reset All Votes</button></form></section>
+</main>
+
+<script>
+function esc(v){const d=document.createElement("div");d.textContent=v||"";return d.innerHTML;}
+function updateLiveResults(){
+fetch("/api/admin/results").then(r=>r.json()).then(data=>{
+document.getElementById("liveTotalVotes").textContent=data.total_votes;
+document.getElementById("liveVotedCount").textContent=data.voted_count;
+document.getElementById("liveRemaining").textContent=data.remaining;
+document.getElementById("livePercentage").textContent=data.percentage+"%";
+const leader=data.candidates[0];
+document.getElementById("leaderBox").innerHTML=leader&&leader.votes>0?
+"<strong>🥇 Current Leader: "+esc(leader.name)+"</strong><span>"+leader.votes+" votes</span>":
+"<strong>No votes yet</strong><span>Waiting for the first vote</span>";
+const box=document.getElementById("liveResults");box.innerHTML="";
+data.candidates.forEach((c,i)=>{
+const pct=data.total_votes?((c.votes/data.total_votes)*100).toFixed(1):0;
+const photo=c.photo?"<img src='"+esc(c.photo)+"' alt='"+esc(c.name)+"'>":
+"<div class='small-avatar'>"+esc(c.name.charAt(0))+"</div>";
+box.innerHTML+="<div class='live-result-row'><div class='candidate-result-name'>"+photo+
+"<div><strong>"+(i+1)+". "+esc(c.name)+"</strong><small>"+esc(c.department)+" • "+esc(c.year)+" • "+esc(c.symbol||"No symbol")+
+"</small></div></div><div class='result-progress'><div class='progress-track'><span style='width:"+pct+"%'></span></div><small>"+
+pct+"% of submitted votes</small></div><div class='result-number'><b>"+c.votes+"</b><small>votes</small></div></div>";
+});
+});}
+updateLiveResults();setInterval(updateLiveResults,3000);
+const voterFile=document.getElementById("voterFile");
+if(voterFile){voterFile.addEventListener("change",function(){
+ const name=this.files[0]?.name || "Choose CSV / Excel file";
+ document.getElementById("voterFileName").textContent=name;
+});}
+
+const photoInput=document.getElementById("candidatePhoto");
+if(photoInput){photoInput.addEventListener("change",function(){
+const file=this.files[0],preview=document.getElementById("candidatePreview");
+if(file)preview.innerHTML="<img src='"+URL.createObjectURL(file)+"' alt='Preview'>";
+});}
+</script></body></html>

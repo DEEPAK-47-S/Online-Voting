@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Election Results | NIET</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header class="site-header">
+<div class="header-glow"></div>
+<div class="brand-wrap"><img src="/static/images/niet-header.png" class="institute-logo"
+alt="Nehru Institute of Engineering and Technology"></div>
+</header>
+<nav class="top-nav"><strong>🏆 ELECTION RESULTS</strong>
+<div><a href="/admin">Dashboard</a><a href="/admin/export">Export CSV</a><a href="/admin/logout">Logout</a></div></nav>
+<main class="container"><div class="section-head"><div><span class="eyebrow">OFFICIAL COUNT</span>
+<h1>Election Results</h1><p class="muted">Candidates ranked by votes received.</p></div>
+<button class="btn secondary" onclick="window.print()">Print</button></div>
+<div class="results">
+{% for c in results %}
+<div class="result-card"><div class="rank">{{ loop.index }}</div>
+{% if c.photo %}<img src="{{ c.photo }}" class="result-photo" alt="{{ c.name }}">
+{% else %}<div class="result-photo avatar">{{ c.name[0] }}</div>{% endif %}
+<div class="result-info"><h2>{{ c.name }}</h2><p>{{ c.department }} • {{ c.year }} • {{ c.symbol or 'No symbol' }}</p>
+{% set total = results|sum(attribute='votes') %}<div class="bar">
+{% if total > 0 %}<span style="width: {{ (c.votes / total * 100)|round(2) }}%"></span>{% endif %}
+</div></div><div class="vote-count">{{ c.votes }}<small>votes</small></div></div>
+{% endfor %}</div></main></body></html>
